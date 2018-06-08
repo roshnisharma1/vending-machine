@@ -1,0 +1,41 @@
+// Program by: Roshni Sharma
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+ 
+ 
+// Drink Items Structure
+typedef struct _DrinkItems
+{
+    int numItems;           // First integer in file
+    int drinkID;            // ID for the drink number
+    char *drinkName;        // Name of the drink
+    int drinksAvail;        // Number of each drink available
+    double drinkPrice;      // Price of each drink
+    int drinksPurchased;    // Num of drinks purchased
+} DrinkItems;
+ 
+ 
+// Drink Machine structure
+typedef struct _DrinkMachine
+{
+    int versionNum;
+    int numOfDrinkItems;
+    int currentLocation;
+    DrinkItems *drinkItemArray;
+} DrinkMachine;
+ 
+// Enum for boolean function of availability
+typedef enum bool {false, true} bool;
+ 
+ 
+// Function prototypes
+DrinkMachine *create();
+DrinkItems *firstDrink(DrinkMachine *drinkMachine);
+DrinkItems *nextDrink(DrinkMachine *drinkMachine);
+int items(DrinkMachine *drinkMachine);
+bool available(DrinkMachine *drinkMachine, int);
+double cost(DrinkMachine *drinkMachine, int);
+void dumpDrinkMachine(DrinkMachine *drinkMachine);
+void destroy(DrinkMachine *drinkMachine);
