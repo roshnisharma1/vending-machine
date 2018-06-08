@@ -1,0 +1,261 @@
+// Program by: Roshni Sharma
+ 
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "drinkmachine.h"
+ 
+ 
+// Global variables
+const int INVALID_INDEX = -1;
+const int STRING_BUFFER = 114;
+const char* INPUT_FILE_NAME = "drink_machine.txt";
+ 
+ 
+// Main Function
+int main(void)
+{
+    // Call the function to fill items into Drink Items
+    DrinkMachine *drinkMachine = create();
+     
+    // If file is not able to be read
+    if(drinkMachine == NULL)
+    {
+        printf("\nError reading file data.\n");
+    }
+     
+     
+    // Create a new drink item structure to call first drink / next drink functions
+    DrinkItems *pDrink;
+    for (pDrink = firstDrink(drinkMachine); pDrink != NULL; pDrink = nextDrink(drinkMachine))
+    {
+        // Call function for num of items
+        items(drinkMachine);
+         
+        // Call the function for availability
+        int id;
+        available(drinkMachine, id);
+         
+        // Call the function to determine cost
+        double pricing = cost(drinkMachine, id);
+         
+        // Call function to print data
+        dumpDrinkMachine(drinkMachine);
+    }
+     
+    // Free the data structures
+    destroy(drinkMachine);
+     
+    return EXIT_SUCCESS;
+}
+ 
+ 
+// Create function
+DrinkMachine *create()
+{
+    // Input file stream
+    FILE *inFile;
+     
+    // Pointer to drink item structure
+    DrinkMachine *drinkMachine= malloc(sizeof(drinkMachine));
+     
+    // Create a temporary buffer
+    char tmpBuffer[STRING_BUFFER];
+     
+    // Open the input file
+    inFile = fopen(INPUT_FILE_NAME, "r");
+     
+    // If the file doesn't open...
+    if (!inFile)
+    {
+        printf("Error opening the file.\n");
+         
+        return NULL;
+    }
+     
+    // If the file does open...
+    else
+    {
+        printf("File successfully opened.\n");
+    }
+     
+     
+    // Read in the first number
+    fscanf(inFile, "%d", &(drinkMachine->numOfDrinkItems));
+     
+    drinkMachine->drinkItemArray = malloc(drinkMachine->numOfDrinkItems * sizeof(DrinkItems));
+     
+    // If calloc was unsuccessfull...
+    if (drinkMachine->drinkItemArray == NULL)
+    {
+        return NULL;
+    }
+     
+    // Print out the first number
+    printf("\nThis number was just read from the file: ");
+    printf("%d\n", drinkMachine->numOfDrinkItems);
+     
+     
+    // If calloc is successful...
+    // Read in the rest of the values in the file
+    for (int m=0; m < drinkMachine->numOfDrinkItems; m++)
+    {
+        // Read in the string value
+        fscanf(inFile, "%s", tmpBuffer);
+        long stringLength;
+        stringLength = strlen(tmpBuffer);
+         
+         
+        drinkMachine->drinkItemArray[m].drinkName = (char*) malloc(stringLength+1);
+         
+        // Copy string from buffer to newly allocated space
+        memcpy(drinkMachine->drinkItemArray[m].drinkName, tmpBuffer, stringLength+1);
+         
+        // Read in the floating point value
+        fscanf(inFile, "%lf", &(drinkMachine->drinkItemArray[m].drinkPrice));
+         
+        // Read in the integer value
+        fscanf(inFile, "%d", &(drinkMachine->drinkItemArray[m].drinksAvail));
+         
+        drinkMachine->drinkItemArray[m].drinksPurchased = 0;
+         
+        drinkMachine->drinkItemArray[m].drinkID = (m+1);
+    }
+     
+    // Close the file
+    fclose(inFile);
+    fflush(stdout);
+     
+    return drinkMachine;
+}
+ 
+ 
+// Function for first drink ordered
+DrinkItems *firstDrink(DrinkMachine *drinkMachine)
+{
+     
+    if (drinkMachine->drinkItemArray == NULL)
+    {
+        drinkMachine->currentLocation = INVALID_INDEX;
+        return NULL;
+    }
+     
+    // Set location to 0
+    drinkMachine->currentLocation = 0;
+     
+    return drinkMachine->drinkItemArray;
+}
+ 
+ 
+// Function for next drink ordered
+DrinkItems *nextDrink(DrinkMachine *drinkMachine)
+{
+     
+    if (drinkMachine->currentLocation == INVALID_INDEX)
+    {
+        return NULL;
+    }
+     
+    // Increment location by 1
+    drinkMachine->currentLocation++;
+     
+    // If location exceeds size of struct
+    if (drinkMachine->currentLocation >= drinkMachine->numOfDrinkItems)
+    {
+        drinkMachine->currentLocation = INVALID_INDEX;
+        return NULL;
+    }
+     
+    return &drinkMachine->drinkItemArray[drinkMachine->currentLocation];
+}
+ 
+ 
+// Function to return num of items
+int items(DrinkMachine *drinkMachine)
+{
+    return drinkMachine->numOfDrinkItems;
+}
+ 
+ 
+// Function to check availability
+bool available(DrinkMachine *drinkMachine, int id)
+{
+    if (id <= 0 || id > drinkMachine->numOfDrinkItems)
+    {
+        return false;
+    }
+     
+    else if (drinkMachine->drinkItemArray[id].numItems <= 0)
+    {
+        return false;
+    }
+     
+    else
+    {
+        return true;
+    }
+}
+ 
+ 
+// Function to determine cost
+double cost(DrinkMachine *drinkMachine, int id)
+{
+    double cost;
+     
+    if (id <= 0 || id > drinkMachine->numOfDrinkItems)
+    {
+        cost = -1;
+    }
+     
+    else
+    {
+        cost = drinkMachine->drinkItemArray[id].drinkPrice;
+    }
+     
+    return cost;
+}
+ 
+// Function to print file data
+void dumpDrinkMachine(DrinkMachine *drinkMachine)
+{
+    // Print the data
+    printf("\nHere are the drinks in your drink machine:\n\n");
+     
+    // Print headers
+    printf("%-4s\t", "ID");
+    printf("%-13s\t", "Name");
+    printf("%-8s\t", "Price");
+    printf("%-8s\t", "Qty");
+    printf("%-8s\n", "Sold");
+     
+    // Read the rest of the items and print them to screen
+    for (int i=0; i< drinkMachine->numOfDrinkItems; i++)
+    {
+        printf("%-4d\t", drinkMachine->drinkItemArray[i].drinkID);
+        printf("%-13s\t", drinkMachine->drinkItemArray[i].drinkName);
+        printf("%-8.2lf\t", drinkMachine->drinkItemArray[i].drinkPrice);
+        printf("%-8d\t", drinkMachine->drinkItemArray[i].drinksAvail);
+        printf("%-8d\n", drinkMachine->drinkItemArray[i].drinksPurchased);
+    }
+     
+    printf("\n");
+     
+    // Force output to screen
+    fflush(stdout);
+     
+    return;
+}
+ 
+ 
+// Function to free file data
+void destroy(DrinkMachine *drinkMachine)
+{
+    // Safety check
+    if (drinkMachine == NULL)
+        return;
+     
+    // Free the structure itself
+    free(drinkMachine->drinkItemArray);
+    free(drinkMachine);
+}
